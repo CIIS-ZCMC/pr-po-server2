@@ -38,3 +38,15 @@ Route::namespace('App\Http\Controllers')->group(function () {
 Route::namespace('App\Http\Controllers')->group(function () {
     Route::get('purchase_order/import', 'PurchaseOrderController@import');
 });
+
+
+//DELIVERY ORDER
+Route::namespace('App\Http\Controllers') -> group(function(){
+    Route::get('delivery', 'DeliveryController@index');
+});
+
+
+//ISSUANCE 
+Route::namespace('App\Http\Controllers') -> group(function(){
+    Route::get('issuance', 'IssuanceController@index');
+});

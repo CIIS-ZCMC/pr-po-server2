@@ -32,6 +32,7 @@ class PurchaseOrderController extends Controller
                 LEFT JOIN dbo.iwPRinv as prin ON prin.PK_TRXNO = pri.FK_TRXNO 
             ');
 
+
             $PurchaseOrderMemoID = array();
 
             foreach($data as $key => $val)
