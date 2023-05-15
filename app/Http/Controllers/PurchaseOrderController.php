@@ -139,7 +139,7 @@ class PurchaseOrderController extends Controller
                 $purchase_order -> save();
 
                 /**
-                 * Register Purchase order Item associate newly created Purchase Order
+                 * Register Purchase order Item associate newly created Purchase Orders
                  */
                 $newPurchaseOrderItem = new POItem();
                 $newPurchaseOrderItem -> item_spec = $val -> itemSpec;

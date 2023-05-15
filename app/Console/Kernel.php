@@ -16,9 +16,9 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('app:download-p-r-record') -> hourly(); 
         $schedule->command('app:backup-database') -> daily();
-        $schedule->command('app:download-category-record') -> monthly(); 
-        $schedule->command('app:download-department') -> monthly(); 
-        $schedule->command('app:download-item') -> monthly(); 
+        $schedule->command('app:download-category-record') -> hourly(); 
+        $schedule->command('app:download-department') -> hourly(); 
+        $schedule->command('app:download-item') -> hourly(); 
     }
 
     /**

@@ -2,14 +2,9 @@
 
 namespace App\Console\Commands;
 
-ini_set('max_execution_time', '500');
-
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-
-use App\Methods\ValidateCookie;
-use App\Methods\CreateLogs;
-
+use Illuminate\Support\Facades\Log;
 
 use App\Models\Department;
 
@@ -35,11 +30,18 @@ class DownloadDepartment extends Command
     public function handle(): void
     {
         
-        $path = 'app/Console/Commands/BackupDatabase';
-        $syslogs   = new CreateLogs();
 
         try{
-            $data = DB::connection("sqlsrv")->SELECT("SELECT PK_mscWarehouse, description, shortname FROM dbo.mscWarehouse");
+            $departmentDataLength = DB::table('department') -> count();
+
+            $data = DB::connection("sqlsrv")
+                -> SELECT("SELECT PK_mscWarehouse, description, shortname FROM dbo.mscWarehouse ORDER BY PK_mscWarehouse LIMIT 20 OFFSET ?", [$departmentDataLength]);
+
+            
+            if($departmentDataLength === count($data))
+            {
+                return;
+            }
 
             foreach($data as $key => $val)
             {
@@ -56,8 +58,10 @@ class DownloadDepartment extends Command
                 $department -> updated_at = now();
                 $department -> save();
             }
+            
+            Log::channel('custom-info') -> info("Download Department[handle] : SUCCESS");
         }catch(\Throwable $th){
-            $syslogs -> Save_Logs("ERROR : ".$path."::handle : " . $th->getMessage(), "POST", 1);
+            Log::channel('custom-error') -> error("Download Department[handle] :".$th -> getMessage());
         }
     }
 }

@@ -4,11 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-ini_set('max_execution_time', '3000');
-
-
-use App\Methods\ValidateCookie;
-use App\Methods\CreateLogs;
+use Illuminate\Support\Facades\Log;
 
 use App\Models\Item;
 use App\Models\ItemCategory;
@@ -34,11 +30,10 @@ class DownloadItem extends Command
      */
     public function handle(): void
     {
-        $path = 'app/Console/Commands/DownloadItem';
-        $syslogs   = new CreateLogs();
-
         try{
-            $data = DB::connection("sqlsrv")->SELECT("SELECT PK_iwItems, FK_mscItemCategory, barcodeid, itemdesc, itemabbrev, phicprice FROM dbo.iwItems");
+            $itemDataLength = DB::table('items') -> count();
+            
+            $data = DB::connection("sqlsrv")->SELECT("SELECT PK_iwItems, FK_mscItemCategory, barcodeid, itemdesc, itemabbrev, phicprice FROM dbo.iwItems ORDER BY PK_iwItems LIMIT 20 OFFSET ?",[$itemDataLength]);
 
             foreach($data as $key => $val)
             {
@@ -67,8 +62,9 @@ class DownloadItem extends Command
                 $itemCategory -> save();
             }
 
+            Log::info('custom-error') -> error("Download Item[handle] : SUCCESS");
         }catch(\Throwable $th){
-            $syslogs -> Save_Logs("ERROR : ".$path."::handle : " . $th->getMessage(), "POST", 1);
+            Log::channel('custom-error') -> error("Download Item[handle] :".$th -> getMessage());
         }
     }
 }

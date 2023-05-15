@@ -2,13 +2,9 @@
 
 namespace App\Console\Commands;
 
-ini_set('max_execution_time', '5500');
-
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-
-use App\Methods\ValidateCookie;
-use App\Methods\CreateLogs;
+use Illuminate\Support\Facades\Log;
 
 use App\Models\Item;
 use App\Models\PurchaseOrder;
@@ -37,20 +33,23 @@ class DownloadPORecord extends Command
      */
     public function handle(): void
     {   
-        $path = 'app/Console/Commands/DownloadPORecord';
-        $syslogs   = new CreateLogs();
 
         try{
-            $data = DB::connection('sqlsrv') -> SELECT('SELECT po.GuarantorName AS supplier_name, pri.FK_TRXNO, prin.PK_TRXNO as PRNo, po.PONo, po.PODate, 
-                po.ItemId, po.itemdesc, po.price, po.qty, po.unit, po.Amount, po.totAmount, po.remarks, po.PK_TRXNO as PO_PK_TRXNO, po.fullname, 
-                po.prcontactperson, po.vatamt, po.vatincl, po.praddress, po.prtelno, po.prfaxno, po.telefax, po.mobilephone, po.ReqNo, po.mobilephone, 
-                po.ReqNo, po.conversion, po.Terms, po.tinno, po.itemSpec, po.seriesNo, po.itbno, po.FK_mscProcurementList, po.PK_mscProcurementList, po.description
+            $poRecordDataLength = DB::table('purchase_order') -> count();
+
+            $data = DB::connection('sqlsrv') -> select('
+                SELECT po.GuarantorName AS supplier_name, pri.FK_TRXNO, prin.PK_TRXNO as PRNo, po.PONo, po.PODate, 
+                    po.ItemId, po.itemdesc, po.price, po.qty, po.unit, po.Amount, po.totAmount, po.remarks, po.PK_TRXNO as PO_PK_TRXNO, po.fullname, 
+                    po.prcontactperson, po.vatamt, po.vatincl, po.praddress, po.prtelno, po.prfaxno, po.telefax, po.mobilephone, po.ReqNo, po.mobilephone, 
+                    po.conversion, po.Terms, po.tinno, po.itemSpec, po.seriesNo, po.itbno, po.PK_mscProcurementList, po.description
                 FROM dbo.vwReportPurchaseOrder AS po 
                 LEFT JOIN dbo.iwPOitem as poi ON poi.FK_TRXNO = po.PK_TRXNO
                 LEFT JOIN dbo.iwPRitem as pri ON pri.PK_iwPritem = poi.PK_iwPOitem
-                LEFT JOIN dbo.iwPRinv as prin ON prin.PK_TRXNO = pri.FK_TRXNO 
-                WHERE po.PONo = 22060355
-            ');
+                LEFT JOIN dbo.iwPRinv as prin ON prin.PK_TRXNO = pri.FK_TRXNO
+                ORDER BY po.PODate DESC
+                OFFSET ? ROWS
+                FETCH NEXT 20 ROWS ONLY
+            ', [$poRecordDataLength]);
 
             $PurchaseOrderMemoID = array();
 
@@ -152,9 +151,9 @@ class DownloadPORecord extends Command
                 $newPurchaseOrderItem -> save();
             }
 
-            $syslogs -> Save_Logs("SUCCESS : ".$path."::handle ", "POST", 1);
+            Log::channel('custom-info') -> info("Download Purchase Order Record[handle] : SUCCESS");
         }catch(\Throwable $th){
-            $syslogs -> Save_Logs("ERROR : ".$path."::handle : " . $th->getMessage(), "POST", 1);
+            Log::channel('custom-error') -> error("Download Purchase Order Record[handle] :".$th -> getMessage());
         }
     }
 }

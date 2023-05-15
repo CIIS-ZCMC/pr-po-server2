@@ -73,6 +73,24 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'custom-info' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/request.log'),
+            'level' => 'info',
+        ],
+
+        'custom-warning' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/request.log'),
+            'level' => 'warning',
+        ],
+
+        'custom-error' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/request.log'),
+            'level' => 'error',
+        ],
+
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),

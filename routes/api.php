@@ -48,5 +48,5 @@ Route::namespace('App\Http\Controllers') -> group(function(){
 
 //ISSUANCE 
 Route::namespace('App\Http\Controllers') -> group(function(){
-    Route::get('issuance', 'IssuanceController@index');
+    Route::get('issuance/import', 'IssuanceController@index');
 });

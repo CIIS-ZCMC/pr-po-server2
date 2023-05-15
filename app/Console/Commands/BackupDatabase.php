@@ -8,8 +8,7 @@ use Illuminate\Console\Command;
 use Spatie\Backup\Tasks\Backup\BackupJob;
 use Spatie\Backup\Tasks\Backup\DbDumperFactory;
 
-use App\Methods\ValidateCookie;
-use App\Methods\CreateLogs;
+use Illuminate\Support\Facades\Log;
 
 use Spatie\DbDumper\Databases\MySql;
 
@@ -41,9 +40,6 @@ class BackupDatabase extends Command
      */
     public function handle(): void
     {   
-        $path = 'app/Console/Commands/BackupDatabase';
-        $validation;
-
         try {
             $fileName = 'PR-PO-ISSUANCE-DB-BACKUP-'.date('Ymd').'-.sql';
 
@@ -54,12 +50,12 @@ class BackupDatabase extends Command
                 ->dumpToFile(resource_path('backup/'.$fileName));
             
             if ($backupResult) {
-                echo "Backup successful!";
+                Log::channel('custom-info') -> info("Back-up Database[handle] : SUCCESS");
             } else {
-                echo "Backup failed!";
+                Log::channel('custom-info') -> info("Back-up Database[handle] : FAILED");
             }
         } catch (Exception $e) {
-            $syslogs -> Save_Logs("ERROR : ".$path."::handle : " . $th->getMessage(), "POST", 1);
+            Log::channel('custom-error') -> error("Back-up Database[handle] :".$e);
         }
     }
 }

@@ -2,13 +2,9 @@
 
 namespace App\Console\Commands;
 
-ini_set('max_execution_time', '5500');
-
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-
-use App\Methods\ValidateCookie;
-use App\Methods\CreateLogs;
+use Illuminate\Support\Facades\Log;
 
 use App\Models\Item;
 use App\Models\PurchaseRequest;
@@ -38,9 +34,6 @@ class DownloadPRRecord extends Command
      */
     public function handle(): void
     {
-        $path = 'app/Console/Commands/DownloadPRRecord';
-        $syslogs   = new CreateLogs();
-
         /**
          * State Algorith here for PR Download
          * Target to Run every Hour 
@@ -54,6 +47,8 @@ class DownloadPRRecord extends Command
          * This task is important for continuous update of PR from the BizzBox and Save in the pr po issuance database
          */
         try{
+            $purchaseRequestDataLength = DB::table('purchase_request') -> count();
+
             //Fetch purchase list from bizzbox removing test data.
             $data = DB::connection("sqlsrv") -> SELECT("SELECT a.PK_TRXNO, dbo.udf_GetFullName(a.FK_ASUPost) as UserName,
                         d.PK_iwItems, d.itemdesc, d.unit, c.qty,c.qty * ISNULL(d.lastpurcprice, 0) AS Price,
@@ -63,7 +58,9 @@ class DownloadPRRecord extends Command
                         dbo.iwPRitem AS c ON c.FK_TRXNO = a.PK_TRXNO INNER JOIN
                         dbo.iwItems AS d ON c.FK_iwItems = d.PK_iwItems
                         WHERE a.cancelflag = 0 AND a.deleteflag = 0 AND CAST(a.remarks as nvarchar(555)) NOT IN ('TESTING','WRONG ENTRY','sample entry only','Test')
-                        ORDER BY a.PK_TRXNO");
+                        ORDER BY a.docdate
+                        OFFSET ? ROWS
+                        FETCH NEXT 20 ROWS ONLY", [$purchaseRequestDataLength]);
 
             $PR_Memo_Record = array();
 
@@ -127,8 +124,9 @@ class DownloadPRRecord extends Command
 
             }
 
+            Log::channel('custom-info') -> info("Download Purchase Request Record[handle] : SUCCESS");
         }catch(\Throwable $th){
-            $syslogs -> Save_Logs("ERROR : ".$path."::handle : " . $th->getMessage(), "POST", 1);
+            Log::channel('custom-error') -> error("Download Purchase Request Record[handle] :".$th -> getMessage());
         }
     }
     

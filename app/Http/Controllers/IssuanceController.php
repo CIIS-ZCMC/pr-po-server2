@@ -15,10 +15,13 @@ class IssuanceController extends Controller
     public function index()
     {
         try{
+            return 'test';
             $data = DB::connection(env('DB_CONNECTION1')) -> SELECT('SELECT PK_TRXNO, remarks, 
                         FK_mscWarehouseDST, FK_mscWarehouseSRC, docdate, docno, totqty, 
                         totitm, regdate, postflag, cancelflag, deleteflag, amount
                         FROM dbo.iwIssinv');
+
+            return response() -> json(['message' => $data], 200);
 
             foreach($data as $key => $val)
             {
